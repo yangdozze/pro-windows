@@ -65,6 +65,27 @@ jobs:
           $portable = "windows/artifacts/velopack/PalmierPro-$version-win-x64-Portable.zip"
           Compress-Archive -Path windows/artifacts/publish/win-x64/* -DestinationPath $portable -CompressionLevel Optimal -Force
 
+      - name: Smoke-test packaged Windows app
+        shell: pwsh
+        working-directory: source
+        run: |
+          $exe = Resolve-Path windows/artifacts/publish/win-x64/PalmierPro.exe
+          $process = Start-Process -FilePath $exe -PassThru
+          try {
+            Start-Sleep -Seconds 8
+            $process.Refresh()
+            if ($process.HasExited) {
+              throw "PalmierPro.exe exited during startup smoke test (code $($process.ExitCode))."
+            }
+            Write-Host "PalmierPro.exe stayed running through startup."
+          }
+          finally {
+            $process.Refresh()
+            if (-not $process.HasExited) {
+              Stop-Process -Id $process.Id -Force
+            }
+          }
+
       - name: Verify package and write checksums
         shell: pwsh
         working-directory: source
