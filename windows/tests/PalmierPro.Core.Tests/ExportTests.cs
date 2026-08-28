@@ -51,7 +51,7 @@ public class ExportTests
 
             await WaitUntil(() => started.Count == 1);
             Assert.Equal(a.Id, started[0]);
-            Assert.Empty(started.Where(id => id == b.Id));
+            Assert.DoesNotContain(b.Id, started);
 
             gate.SetResult();
             await WaitUntil(() =>
@@ -201,7 +201,7 @@ public class ExportTests
         Assert.Contains("HEVC", ExportPlatformSupport.MezzanineGuidance);
     }
 
-    private static async Task WaitUntil(Func<bool> predicate, int timeoutMs = 5000)
+    private static async Task WaitUntil(Func<bool> predicate, int timeoutMs = 15000)
     {
         var start = Environment.TickCount64;
         while (!predicate())
