@@ -1,0 +1,112 @@
+name: Build Palmier Pro Windows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build, test and package Windows x64
+    runs-on: windows-2025
+    timeout-minutes: 180
+
+    steps:
+      - name: Check out Windows port source
+        uses: actions/checkout@v4
+        with:
+          repository: Yasser-Belatreche/palmier-pro
+          ref: 974dd45e6e7c6e8b9f3f0e2e5869a1f2393d2ff7
+          path: source
+          fetch-depth: 1
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        shell: pwsh
+        working-directory: source
+        run: dotnet restore windows/PalmierPro.sln
+
+      - name: Build Windows app
+        shell: pwsh
+        working-directory: source
+        run: dotnet build windows/PalmierPro.sln -c Release --no-restore -p:Platform=x64
+
+      - name: Run Windows port tests
+        shell: pwsh
+        working-directory: source
+        run: |
+          $projects = Get-ChildItem windows/tests -Recurse -Filter *.csproj
+          if (-not $projects) { throw "No Windows test projects found." }
+          foreach ($project in $projects) {
+            Write-Host "Testing $($project.FullName)"
+            dotnet test $project.FullName -c Release -p:Platform=x64 --no-restore
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Package self-contained installer
+        shell: pwsh
+        working-directory: source
+        run: |
+          $version = "0.1.${{ github.run_number }}"
+          powershell -ExecutionPolicy Bypass -File windows/scripts/pack.ps1 -Version $version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify package and write checksums
+        shell: pwsh
+        working-directory: source
+        run: |
+          $setup = Get-ChildItem windows/artifacts/velopack -Filter *Setup.exe | Select-Object -First 1
+          $portable = Get-ChildItem windows/artifacts/velopack -Filter *Portable.zip | Select-Object -First 1
+          if (-not $setup) { throw "Windows installer was not produced." }
+          if (-not $portable) { throw "Portable Windows package was not produced." }
+          $files = @($setup, $portable)
+          $lines = foreach ($file in $files) {
+            $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($file.Name)"
+          }
+          $lines | Set-Content windows/artifacts/velopack/SHA256SUMS.txt
+          @(
+            "Palmier Pro Windows build"
+            "Source: https://github.com/palmier-io/palmier-pro"
+            "Windows port source: https://github.com/Yasser-Belatreche/palmier-pro/commit/974dd45e6e7c6e8b9f3f0e2e5869a1f2393d2ff7"
+            "Build repository: https://github.com/yangdozze/pro-windows"
+            "Architecture: Windows x64"
+          ) | Set-Content windows/artifacts/velopack/BUILD_SOURCE.txt
+          Get-Content windows/artifacts/velopack/SHA256SUMS.txt
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Palmier-Pro-Windows-x64
+          path: |
+            source/windows/artifacts/velopack/*Setup.exe
+            source/windows/artifacts/velopack/*Portable.zip
+            source/windows/artifacts/velopack/SHA256SUMS.txt
+            source/windows/artifacts/velopack/BUILD_SOURCE.txt
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Publish prerelease
+        shell: pwsh
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "windows-v0.1.${{ github.run_number }}"
+          $assets = @(
+            (Get-ChildItem windows/artifacts/velopack -Filter *Setup.exe | Select-Object -First 1).FullName,
+            (Get-ChildItem windows/artifacts/velopack -Filter *Portable.zip | Select-Object -First 1).FullName,
+            (Resolve-Path windows/artifacts/velopack/SHA256SUMS.txt).Path,
+            (Resolve-Path windows/artifacts/velopack/BUILD_SOURCE.txt).Path
+          )
+          gh release create $tag @assets --repo yangdozze/pro-windows --title "Palmier Pro Windows $tag" --prerelease --notes "Native Windows x64 build of the community Palmier Pro Windows port. Built and tested automatically from the pinned source commit documented in BUILD_SOURCE.txt."
