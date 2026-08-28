@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using PalmierPro.Agent.Clients;
 using PalmierPro.App.Theme;
 using PalmierPro.App.Update;
 using PalmierPro.Core.Localization;
@@ -178,11 +179,86 @@ public sealed partial class SettingsWindow : Window
         PaneHost.Children.Add(Labeled(
             L10n.String("settings.mcpEnabled"),
             Toggle(settings.McpEnabled, v => SettingsStore.Shared.Update(s => s.McpEnabled = v))));
-        PaneHost.Children.Add(Label("Agent model"));
-        var model = new TextBox { Text = settings.AgentModel ?? "", Width = 320 };
+        PaneHost.Children.Add(Label("AI provider"));
+        var provider = new ComboBox { Width = 320 };
+        provider.Items.Add(new ComboBoxItem { Content = "Anthropic", Tag = AgentProvider.Anthropic });
+        provider.Items.Add(new ComboBoxItem { Content = "OpenAI", Tag = AgentProvider.OpenAI });
+
+        var model = new ComboBox { Width = 320, IsEditable = true };
+        var modelReady = false;
+
+        static IReadOnlyList<(string Label, string Id)> Models(AgentProvider selected) => selected switch
+        {
+            AgentProvider.OpenAI =>
+            [
+                ("GPT-5.6 Luna", "gpt-5.6-luna"),
+                ("GPT-5.6 Terra", "gpt-5.6-terra"),
+                ("GPT-5.6 Sol", "gpt-5.6-sol"),
+            ],
+            _ =>
+            [
+                ("Claude Sonnet 5", "claude-sonnet-5"),
+                ("Claude Opus 5", "claude-opus-5"),
+                ("Claude Fable 5", "claude-fable-5"),
+            ],
+        };
+
+        void PopulateModels(AgentProvider selected, string? preferred)
+        {
+            modelReady = false;
+            model.Items.Clear();
+            var wanted = string.IsNullOrWhiteSpace(preferred) ? selected.DefaultModel() : preferred.Trim();
+            var selectedIndex = -1;
+            foreach (var entry in Models(selected))
+            {
+                model.Items.Add(new ComboBoxItem { Content = entry.Label, Tag = entry.Id });
+                if (entry.Id.Equals(wanted, StringComparison.OrdinalIgnoreCase))
+                    selectedIndex = model.Items.Count - 1;
+            }
+            if (selectedIndex < 0)
+            {
+                model.Items.Add(new ComboBoxItem { Content = wanted, Tag = wanted });
+                selectedIndex = model.Items.Count - 1;
+            }
+            model.SelectedIndex = selectedIndex;
+            modelReady = true;
+        }
+
+        var selectedProvider = AgentProviderExtensions.Parse(settings.AgentProvider);
+        provider.SelectedIndex = selectedProvider == AgentProvider.OpenAI ? 1 : 0;
+        PopulateModels(selectedProvider, settings.AgentModel);
+
+        provider.SelectionChanged += (_, _) =>
+        {
+            if (provider.SelectedItem is not ComboBoxItem { Tag: AgentProvider selected }) return;
+            var id = selected == AgentProvider.OpenAI ? "openai" : "anthropic";
+            SettingsStore.Shared.Update(s =>
+            {
+                s.AgentProvider = id;
+                s.AgentModel = selected.DefaultModel();
+            });
+            PopulateModels(selected, selected.DefaultModel());
+        };
+        model.SelectionChanged += (_, _) =>
+        {
+            if (!modelReady || model.SelectedItem is not ComboBoxItem { Tag: string id }) return;
+            SettingsStore.Shared.Update(s => s.AgentModel = id);
+        };
         model.LostFocus += (_, _) =>
-            SettingsStore.Shared.Update(s => s.AgentModel = model.Text.Trim());
+        {
+            var value = model.Text.Trim();
+            if (!string.IsNullOrEmpty(value))
+                SettingsStore.Shared.Update(s => s.AgentModel = value);
+        };
+        PaneHost.Children.Add(provider);
+        PaneHost.Children.Add(Label("Agent model"));
         PaneHost.Children.Add(model);
+
+        AddApiKeyEditor(AgentProvider.Anthropic);
+        AddApiKeyEditor(AgentProvider.OpenAI);
+        PaneHost.Children.Add(Hint(
+            "The Agent uses your selected provider directly and can execute Palmier editing tools. " +
+            "Environment variables ANTHROPIC_API_KEY and OPENAI_API_KEY are also supported."));
 
         PaneHost.Children.Add(Label("Whisper model (on-device STT)"));
         var whisperStatus = new TextBlock
@@ -230,6 +306,55 @@ public sealed partial class SettingsWindow : Window
         PaneHost.Children.Add(Hint(
             "Larger models improve captions and Agent inspect_media / get_transcript quality. " +
             "Models are stored under LocalAppData\\PalmierPro\\models."));
+
+        void AddApiKeyEditor(AgentProvider selected)
+        {
+            PaneHost.Children.Add(Label($"{selected.DisplayName()} API key"));
+            var key = new PasswordBox
+            {
+                Width = 320,
+                PlaceholderText = AgentApiKey.Load(selected) is null
+                    ? $"Paste {selected.DisplayName()} API key"
+                    : "Configured — paste a new key to replace",
+                PasswordRevealMode = PasswordRevealMode.Peek,
+            };
+            var status = new TextBlock
+            {
+                FontSize = 11,
+                Opacity = 0.7,
+                Text = AgentApiKey.Load(selected) is null ? "Not configured" : "Configured",
+            };
+            var save = new Button { Content = "Save key" };
+            var remove = new Button { Content = "Remove", Margin = new Thickness(8, 0, 0, 0) };
+            save.Click += (_, _) =>
+            {
+                var value = key.Password.Trim();
+                if (string.IsNullOrEmpty(value))
+                {
+                    status.Text = "Paste a key first.";
+                    return;
+                }
+                AgentApiKey.Save(selected, value);
+                key.Password = "";
+                key.PlaceholderText = "Configured — paste a new key to replace";
+                status.Text = "Saved.";
+            };
+            remove.Click += (_, _) =>
+            {
+                AgentApiKey.Delete(selected);
+                key.Password = "";
+                key.PlaceholderText = $"Paste {selected.DisplayName()} API key";
+                status.Text = Environment.GetEnvironmentVariable(selected.EnvironmentVariable()) is null
+                    ? "Removed."
+                    : $"Using {selected.EnvironmentVariable()} from the environment.";
+            };
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal };
+            buttons.Children.Add(save);
+            buttons.Children.Add(remove);
+            PaneHost.Children.Add(key);
+            PaneHost.Children.Add(buttons);
+            PaneHost.Children.Add(status);
+        }
     }
 
     private void BuildStorage()

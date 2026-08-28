@@ -11,13 +11,18 @@ public sealed class AnthropicClient : IAgentClient
     private static readonly Uri Endpoint = new("https://api.anthropic.com/v1/messages");
     private readonly HttpClient _http;
     private readonly string _apiKey;
-    private readonly AnthropicModel _model;
+    private readonly string _model;
     private readonly int _maxTokens;
 
     public AnthropicClient(string apiKey, AnthropicModel model = AnthropicModel.Sonnet5, int maxTokens = 8192, HttpClient? http = null)
+        : this(apiKey, model.ApiId(), maxTokens, http)
+    {
+    }
+
+    public AnthropicClient(string apiKey, string model, int maxTokens = 64_000, HttpClient? http = null)
     {
         _apiKey = apiKey;
-        _model = model;
+        _model = string.IsNullOrWhiteSpace(model) ? AgentProvider.Anthropic.DefaultModel() : model.Trim();
         _maxTokens = maxTokens;
         _http = http ?? new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
     }
@@ -148,7 +153,7 @@ public sealed class AnthropicClient : IAgentClient
 
         var root = new JsonObject
         {
-            ["model"] = _model.ApiId(),
+            ["model"] = _model,
             ["max_tokens"] = _maxTokens,
             ["stream"] = true,
             ["system"] = system,

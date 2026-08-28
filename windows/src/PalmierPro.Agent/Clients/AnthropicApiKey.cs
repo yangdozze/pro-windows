@@ -10,31 +10,17 @@ public static class AnthropicApiKey
             "PalmierPro", "anthropic.key");
 
     public static string? Load()
-    {
-        var env = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY")?.Trim();
-        if (!string.IsNullOrEmpty(env)) return env;
-        try
-        {
-            if (File.Exists(StorePath))
-            {
-                var key = File.ReadAllText(StorePath).Trim();
-                return string.IsNullOrEmpty(key) ? null : key;
-            }
-        }
-        catch { /* best-effort */ }
-        return null;
-    }
+        => AgentApiKey.Load(AgentProvider.Anthropic);
 
     public static void Save(string key)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(StorePath)!);
-        File.WriteAllText(StorePath, key.Trim());
+        AgentApiKey.Save(AgentProvider.Anthropic, key);
         Changed?.Invoke();
     }
 
     public static void Delete()
     {
-        try { if (File.Exists(StorePath)) File.Delete(StorePath); } catch { }
+        AgentApiKey.Delete(AgentProvider.Anthropic);
         Changed?.Invoke();
     }
 }

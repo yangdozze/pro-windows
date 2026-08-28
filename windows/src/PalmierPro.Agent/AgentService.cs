@@ -9,7 +9,7 @@ using PalmierPro.Agent.Tools;
 namespace PalmierPro.Agent;
 
 /// <summary>
-/// In-app agent chat loop: streams Anthropic responses, executes tools via ToolExecutor,
+/// In-app agent chat loop: streams AI responses, executes tools via ToolExecutor,
 /// and persists sessions. UI observes Messages / IsStreaming / StreamError.
 /// </summary>
 public sealed class AgentService
@@ -23,10 +23,11 @@ public sealed class AgentService
     public bool IsStreaming { get; private set; }
     public string? StreamError { get; private set; }
     public string Draft { get; set; } = "";
-    public AnthropicModel Model { get; set; } = AnthropicModel.Sonnet5;
+    public AgentProvider Provider { get; set; } = AgentProvider.Anthropic;
+    public string Model { get; set; } = AgentProvider.Anthropic.DefaultModel();
     public event Action? Changed;
 
-    public bool HasApiKey => !string.IsNullOrWhiteSpace(AnthropicApiKey.Load());
+    public bool HasApiKey => !string.IsNullOrWhiteSpace(AgentApiKey.Load(Provider));
 
     public AgentService(ToolExecutor executor, string projectKey)
     {
@@ -54,10 +55,10 @@ public sealed class AgentService
         Persist();
         Notify();
 
-        var apiKey = AnthropicApiKey.Load();
+        var apiKey = AgentApiKey.Load(Provider);
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            StreamError = "Set ANTHROPIC_API_KEY or save a key in Agent settings.";
+            StreamError = $"Save a {Provider.DisplayName()} API key in Settings → Agent.";
             Notify();
             return;
         }
@@ -70,7 +71,11 @@ public sealed class AgentService
 
         try
         {
-            var client = new AnthropicClient(apiKey, Model);
+            IAgentClient client = Provider switch
+            {
+                AgentProvider.OpenAI => new OpenAIClient(apiKey, Model),
+                _ => new AnthropicClient(apiKey, Model),
+            };
             var tools = ToolDefinitions.All.Select(t => new AnthropicToolSchema(
                 t.Name.ApiName(),
                 t.Description,

@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using PalmierPro.Agent;
 using PalmierPro.Agent.Chat;
+using PalmierPro.Agent.Clients;
 
 namespace PalmierPro.App.Agent;
 
@@ -77,7 +78,9 @@ public sealed class AgentPanel : UserControl
             _list.ItemsSource = _service.Messages.ToList();
             _status.Text = _service.StreamError
                 ?? (_service.IsStreaming ? "Thinking…" :
-                    _service.HasApiKey ? "Ready" : "Set ANTHROPIC_API_KEY");
+                    _service.HasApiKey
+                        ? $"Ready · {_service.Provider.DisplayName()}"
+                        : $"Set {_service.Provider.DisplayName()} key in Settings → Agent");
             _send.IsEnabled = !_service.IsStreaming;
             _cancel.Visibility = _service.IsStreaming ? Visibility.Visible : Visibility.Collapsed;
             if (_service.Messages.Count > 0)

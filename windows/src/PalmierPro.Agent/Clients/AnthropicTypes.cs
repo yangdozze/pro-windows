@@ -13,10 +13,10 @@ public static class AnthropicModelExtensions
 {
     public static string ApiId(this AnthropicModel model) => model switch
     {
-        AnthropicModel.Sonnet5 => "claude-sonnet-4-20250514",
-        AnthropicModel.Opus48 => "claude-opus-4-20250514",
+        AnthropicModel.Sonnet5 => "claude-sonnet-5",
+        AnthropicModel.Opus48 => "claude-opus-5",
         AnthropicModel.Haiku45 => "claude-haiku-4-5-20251001",
-        _ => "claude-sonnet-4-20250514",
+        _ => "claude-sonnet-5",
     };
 
     public static string DisplayName(this AnthropicModel model) => model switch

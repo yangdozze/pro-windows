@@ -11,7 +11,8 @@ public sealed class AppSettings
     [JsonPropertyName("analyticsEnabled")] public bool AnalyticsEnabled { get; set; } = true;
     [JsonPropertyName("notificationsEnabled")] public bool NotificationsEnabled { get; set; } = true;
     [JsonPropertyName("mcpEnabled")] public bool McpEnabled { get; set; } = true;
-    [JsonPropertyName("agentModel")] public string AgentModel { get; set; } = "claude-sonnet-4-20250514";
+    [JsonPropertyName("agentProvider")] public string AgentProvider { get; set; } = "anthropic";
+    [JsonPropertyName("agentModel")] public string AgentModel { get; set; } = "claude-sonnet-5";
     [JsonPropertyName("agentPanelVisible")] public bool AgentPanelVisible { get; set; } = true;
     [JsonPropertyName("mediaPanelVisible")] public bool MediaPanelVisible { get; set; } = true;
     [JsonPropertyName("inspectorPanelVisible")] public bool InspectorPanelVisible { get; set; } = true;

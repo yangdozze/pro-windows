@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using PalmierPro.Agent;
+using PalmierPro.Agent.Clients;
 using PalmierPro.Agent.Mcp;
 using PalmierPro.Agent.Tools;
 using PalmierPro.App.Agent;
@@ -284,6 +285,11 @@ public sealed partial class ProjectWindow : Window
             _agentHost = new AgentEditorHost(ViewModel);
             _toolExecutor = new ToolExecutor(_agentHost);
             _agentService = new AgentService(_toolExecutor, ViewModel.PackagePath);
+            var agentSettings = PalmierPro.Core.Settings.SettingsStore.Shared.Current;
+            _agentService.Provider = AgentProviderExtensions.Parse(agentSettings.AgentProvider);
+            _agentService.Model = string.IsNullOrWhiteSpace(agentSettings.AgentModel)
+                ? _agentService.Provider.DefaultModel()
+                : agentSettings.AgentModel.Trim();
             AgentHost.Panel.Bind(_agentService);
 
             if (PalmierPro.Core.Settings.SettingsStore.Shared.Current.McpEnabled)
