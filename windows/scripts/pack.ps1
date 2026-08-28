@@ -7,7 +7,7 @@
   2. vpk pack → windows/artifacts/velopack/ (Setup.exe + nupkg + releases)
 
   Update feed: PALMIER_UPDATE_URL or
-    https://github.com/palmier-io/palmier-pro/releases/latest/download
+    https://github.com/yangdozze/pro-windows/releases/latest/download
 
   Requires: .NET 8 SDK, and (for packaging) `dotnet tool install -g vpk`.
 
@@ -60,7 +60,7 @@ $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $appProj = Join-Path $root "windows\src\PalmierPro.App\PalmierPro.App.csproj"
 $publishDir = Join-Path $root "windows\artifacts\publish\$Runtime"
 $packDir = Join-Path $root "windows\artifacts\velopack"
-$feedUrl = "https://github.com/palmier-io/palmier-pro/releases/latest/download"
+$feedUrl = "https://github.com/yangdozze/pro-windows/releases/latest/download"
 
 Write-Host "Publishing $appProj ($Configuration|$Runtime)..."
 dotnet publish $appProj -c $Configuration -r $Runtime --self-contained true -o $publishDir /p:Version=$Version

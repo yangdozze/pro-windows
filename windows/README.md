@@ -2,7 +2,7 @@
 
 WinUI 3 / .NET 8 port of Palmier Pro. Same filmmaker + Agent tool contracts as macOS; Apple-only tech is substituted (Whisper, Media Foundation, Velopack).
 
-Mac remains the primary product surface. This tree is the Windows implementation under `windows/`.
+This tree is the native Windows implementation under `windows/`. Ready-made x64 installers and portable builds are published on the repository's Releases page.
 
 ## Requirements
 
@@ -36,6 +36,10 @@ The executable lands under:
 `windows/src/PalmierPro.App/bin/x64/Debug/net8.0-windows10.0.19041.0/win-x64/PalmierPro.exe`
 
 First launch opens the home window (recent projects / new project). Opening a project opens the five-pane editor.
+
+### AI Agent
+
+Open **Settings → Agent**, choose **Anthropic** or **OpenAI**, select the same model family used by Palmier Pro, and save the provider API key. The in-app Agent streams responses and can execute the Palmier editing tools against the open project. `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` environment variables remain available for development.
 
 ### Tests
 
@@ -75,7 +79,7 @@ powershell -ExecutionPolicy Bypass -File windows/scripts/pack.ps1 -Version 0.1.0
 1. Run `PalmierPro-win-Setup.exe` from `windows/artifacts/velopack/`.
 2. Velopack installs under the user local apps folder and launches the app (Start Menu / Desktop shortcuts).
 3. Auto-update checks the feed at  
-   `https://github.com/palmier-io/palmier-pro/releases/latest/download`  
+   `https://github.com/yangdozze/pro-windows/releases/latest/download`  
    or `PALMIER_UPDATE_URL` / Settings → update feed.
 
 If packaging is skipped, you can still run  
@@ -203,6 +207,7 @@ Useful env vars:
 | `PALMIER_SIGLIP_MODEL` / `PALMIER_DEEPFILTER_MODEL` | Optional ONNX overrides |
 | `PALMIER_UPDATE_URL` | Velopack update feed base URL |
 | `ANTHROPIC_API_KEY` | In-app Agent (when using Anthropic) |
+| `OPENAI_API_KEY` | In-app Agent (when using OpenAI) |
 
 ---
 

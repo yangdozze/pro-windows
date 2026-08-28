@@ -4,11 +4,11 @@
 
 **The video editor built for AI.**
 
-<a href="https://github.com/palmier-io/palmier-pro/releases/latest/download/PalmierPro.dmg">
-  <img src="./assets/macos-badge.png" alt="Download Palmier Pro for macOS" width="180" />
+<a href="https://github.com/yangdozze/pro-windows/releases">
+  <img src="https://img.shields.io/badge/Download-for%20Windows-0078D4?style=for-the-badge&amp;logo=windows11&amp;logoColor=white" alt="Download Palmier Pro for Windows" />
 </a>
 
-<sub><i>Requires macOS 26 (Tahoe) on Apple Silicon</i></sub>
+<sub><i>Native Windows 10/11 x64 build</i></sub>
 
 <a href="https://x.com/Palmier_io"><img src="https://img.shields.io/badge/Follow-%40Palmier__io-000000?style=flat&logo=x&logoColor=white" alt="Follow on X" /></a>
 <a href="https://discord.com/invite/SMVW6pKYmg"><img src="https://img.shields.io/badge/Join-Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Join Discord" /></a>
@@ -40,11 +40,11 @@
 
 ---
 
-Palmier Pro is an open source video editor for Mac. You and your agent can generate and edit videos together inside the timeline.
+Palmier Pro is an open source AI video editor. This repository carries the native Windows build; the editor, timeline, Agent, MCP tools, and Windows media stack live in the same source tree.
 
-### Swift-native video editor
+### Native video editor
 
-We built Palmier Pro from scratch with Swift. The north star is Premiere Pro, with our take on integrating AI into the workflow.
+The macOS app uses Swift; this Windows port uses WinUI 3, .NET 8, Media Foundation, Direct2D, and the same Palmier project and Agent tool contracts.
 
 ### Built-in Generative AI
 

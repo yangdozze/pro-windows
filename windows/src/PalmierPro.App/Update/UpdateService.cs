@@ -11,7 +11,7 @@ public sealed class UpdateService
     public static UpdateService Shared { get; } = new();
 
     public const string DefaultFeedUrl =
-        "https://github.com/palmier-io/palmier-pro/releases/latest/download";
+        "https://github.com/yangdozze/pro-windows/releases/latest/download";
 
     public string? AvailableVersion { get; private set; }
     public string? LastError { get; private set; }

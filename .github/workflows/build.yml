@@ -5,7 +5,11 @@ on:
     branches: [main]
     paths:
       - .github/workflows/build.yml
-      - windows/**
+      - windows/src/**
+      - windows/tests/**
+      - windows/scripts/**
+      - windows/PalmierPro.sln
+      - windows/Directory.Build.props
   workflow_dispatch:
 
 permissions:
@@ -111,4 +115,4 @@ jobs:
             (Resolve-Path windows/artifacts/velopack/SHA256SUMS.txt).Path,
             (Resolve-Path windows/artifacts/velopack/BUILD_SOURCE.txt).Path
           )
-          gh release create $tag @assets --repo yangdozze/pro-windows --title "Palmier Pro Windows $tag" --prerelease --notes "Native Windows x64 build of Palmier Pro from this repository. Includes the Windows editor, Agent tools, Anthropic/OpenAI BYOK support, tests, and packaging provenance."
+          gh release create $tag @assets --repo yangdozze/pro-windows --title "Palmier Pro Windows $tag" --notes "Native Windows x64 build of Palmier Pro from this repository. Includes the Windows editor, Agent tools, Anthropic/OpenAI BYOK support, tests, and packaging provenance."
