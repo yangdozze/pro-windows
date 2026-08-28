@@ -57,8 +57,10 @@ jobs:
         working-directory: source
         run: |
           $version = "0.1.${{ github.run_number }}"
-          powershell -ExecutionPolicy Bypass -File windows/scripts/pack.ps1 -Version $version
+          & windows/scripts/pack.ps1 -Version $version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $portable = "windows/artifacts/velopack/PalmierPro-$version-win-x64-Portable.zip"
+          Compress-Archive -Path windows/artifacts/publish/win-x64/* -DestinationPath $portable -CompressionLevel Optimal -Force
 
       - name: Verify package and write checksums
         shell: pwsh
