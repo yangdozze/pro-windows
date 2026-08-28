@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/build.yml
+      - windows/**
   workflow_dispatch:
 
 permissions:
@@ -17,11 +18,9 @@ jobs:
     timeout-minutes: 180
 
     steps:
-      - name: Check out Windows port source
+      - name: Check out pro-windows source
         uses: actions/checkout@v4
         with:
-          repository: Yasser-Belatreche/palmier-pro
-          ref: 974dd45e6e7c6e8b9f3f0e2e5869a1f2393d2ff7
           path: source
           fetch-depth: 1
 
@@ -79,8 +78,9 @@ jobs:
           @(
             "Palmier Pro Windows build"
             "Source: https://github.com/palmier-io/palmier-pro"
-            "Windows port source: https://github.com/Yasser-Belatreche/palmier-pro/commit/974dd45e6e7c6e8b9f3f0e2e5869a1f2393d2ff7"
+            "Windows port base: https://github.com/Yasser-Belatreche/palmier-pro/commit/974dd45e6e7c6e8b9f3f0e2e5869a1f2393d2ff7"
             "Build repository: https://github.com/yangdozze/pro-windows"
+            "Build commit: ${{ github.sha }}"
             "Architecture: Windows x64"
           ) | Set-Content windows/artifacts/velopack/BUILD_SOURCE.txt
           Get-Content windows/artifacts/velopack/SHA256SUMS.txt
@@ -111,4 +111,4 @@ jobs:
             (Resolve-Path windows/artifacts/velopack/SHA256SUMS.txt).Path,
             (Resolve-Path windows/artifacts/velopack/BUILD_SOURCE.txt).Path
           )
-          gh release create $tag @assets --repo yangdozze/pro-windows --title "Palmier Pro Windows $tag" --prerelease --notes "Native Windows x64 build of the community Palmier Pro Windows port. Built and tested automatically from the pinned source commit documented in BUILD_SOURCE.txt."
+          gh release create $tag @assets --repo yangdozze/pro-windows --title "Palmier Pro Windows $tag" --prerelease --notes "Native Windows x64 build of Palmier Pro from this repository. Includes the Windows editor, Agent tools, Anthropic/OpenAI BYOK support, tests, and packaging provenance."
