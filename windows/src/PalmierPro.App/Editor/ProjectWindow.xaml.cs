@@ -285,12 +285,10 @@ public sealed partial class ProjectWindow : Window
             _agentHost = new AgentEditorHost(ViewModel);
             _toolExecutor = new ToolExecutor(_agentHost);
             _agentService = new AgentService(_toolExecutor, ViewModel.PackagePath);
-            var agentSettings = PalmierPro.Core.Settings.SettingsStore.Shared.Current;
-            _agentService.Provider = AgentProviderExtensions.Parse(agentSettings.AgentProvider);
-            _agentService.Model = string.IsNullOrWhiteSpace(agentSettings.AgentModel)
-                ? _agentService.Provider.DefaultModel()
-                : agentSettings.AgentModel.Trim();
+            ApplyAgentSettings();
             AgentHost.Panel.Bind(_agentService);
+            PalmierPro.Core.Settings.SettingsStore.Shared.Changed += OnAgentSettingsChanged;
+            AgentApiKey.Changed += OnAgentApiKeyChanged;
 
             if (PalmierPro.Core.Settings.SettingsStore.Shared.Current.McpEnabled)
             {
@@ -648,11 +646,40 @@ public sealed partial class ProjectWindow : Window
     private void OnClosed(object sender, WindowEventArgs args)
     {
         _closed = true;
+        PalmierPro.Core.Settings.SettingsStore.Shared.Changed -= OnAgentSettingsChanged;
+        AgentApiKey.Changed -= OnAgentApiKeyChanged;
         try { _lifetime.Cancel(); } catch { /* ignore */ }
         _ = _mcp?.StopAsync();
         _engine?.Dispose();
         _presenter?.Dispose();
         _lifetime.Dispose();
+    }
+
+    private void ApplyAgentSettings()
+    {
+        if (_agentService is null) return;
+        var settings = PalmierPro.Core.Settings.SettingsStore.Shared.Current;
+        _agentService.Provider = AgentProviderExtensions.Parse(settings.AgentProvider);
+        _agentService.Model = string.IsNullOrWhiteSpace(settings.AgentModel)
+            ? _agentService.Provider.DefaultModel()
+            : settings.AgentModel.Trim();
+    }
+
+    private void OnAgentSettingsChanged()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            ApplyAgentSettings();
+            if (_agentService is not null) AgentHost.Panel.Bind(_agentService);
+        });
+    }
+
+    private void OnAgentApiKeyChanged()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_agentService is not null) AgentHost.Panel.Bind(_agentService);
+        });
     }
 
     private void OnPreviewSizeChanged(object sender, SizeChangedEventArgs e)
