@@ -1,0 +1,46 @@
+name: Import Palmier Pro Windows source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/import-source.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out pro-windows
+        uses: actions/checkout@v4
+        with:
+          path: destination
+          fetch-depth: 1
+
+      - name: Check out pinned Windows port
+        uses: actions/checkout@v4
+        with:
+          repository: Yasser-Belatreche/palmier-pro
+          ref: 974dd45e6e7c6e8b9f3f0e2e5869a1f2393d2ff7
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Import source without touching other repositories
+        shell: bash
+        run: |
+          rsync -a --exclude=.git --exclude=.github upstream/ destination/
+          cd destination
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Source is already imported."
+            exit 0
+          fi
+          git commit -m "[windows] Import Palmier Pro Windows source"
+          git push origin HEAD:main
