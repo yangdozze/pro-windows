@@ -69,14 +69,14 @@ powershell -ExecutionPolicy Bypass -File windows/scripts/pack.ps1 -Version 0.1.0
 | Path | What it is |
 |------|------------|
 | `windows/artifacts/publish/win-x64/` | Raw published app (`PalmierPro.exe` + deps) |
-| `windows/artifacts/velopack/PalmierPro-win-Setup.exe` | **Installer** — run this to install |
-| `windows/artifacts/velopack/PalmierPro-win-Portable.zip` | Portable zip (no install) |
+| `windows/artifacts/velopack/PalmierProWindows-win-Setup.exe` | **Installer** — run this to install |
+| `windows/artifacts/velopack/PalmierProWindows-win-Portable.zip` | Velopack portable package |
 | `windows/artifacts/velopack/*-full.nupkg` | Update package |
 | `windows/artifacts/velopack/releases.*.json` / `RELEASES` | Update feed manifests |
 
 ### Try it locally
 
-1. Run `PalmierPro-win-Setup.exe` from `windows/artifacts/velopack/`.
+1. Run `PalmierProWindows-win-Setup.exe` from `windows/artifacts/velopack/`.
 2. Velopack installs under the user local apps folder and launches the app (Start Menu / Desktop shortcuts).
 3. Auto-update checks the feed at  
    `https://github.com/yangdozze/pro-windows/releases/latest/download`  

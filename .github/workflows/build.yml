@@ -93,6 +93,9 @@ jobs:
           $setup = Get-ChildItem windows/artifacts/velopack -Filter *Setup.exe | Select-Object -First 1
           $portable = Get-ChildItem windows/artifacts/velopack -Filter *Portable.zip | Select-Object -First 1
           if (-not $setup) { throw "Windows installer was not produced." }
+          if ($setup.Name -notlike "PalmierProWindows-*") {
+            throw "Installer package id is unsafe: $($setup.Name)"
+          }
           if (-not $portable) { throw "Portable Windows package was not produced." }
           $files = @($setup, $portable)
           $lines = foreach ($file in $files) {
@@ -107,6 +110,7 @@ jobs:
             "Build repository: https://github.com/yangdozze/pro-windows"
             "Build commit: ${{ github.sha }}"
             "Architecture: Windows x64"
+            "Velopack package id: PalmierProWindows"
           ) | Set-Content windows/artifacts/velopack/BUILD_SOURCE.txt
           Get-Content windows/artifacts/velopack/SHA256SUMS.txt
 

@@ -97,7 +97,10 @@ if (-not $vpk) {
 
 Write-Host "Packaging with vpk ($($vpk.Source))..."
 New-Item -ItemType Directory -Force -Path $packDir | Out-Null
-& vpk pack --packId PalmierPro --packVersion $Version --packDir $publishDir --mainExe PalmierPro.exe --outputDir $packDir
+# Keep the install directory distinct from the application's data directory.
+# The app stores settings/models under %LOCALAPPDATA%\PalmierPro; using the same
+# value as the Velopack package id makes upgrades try to replace live app data.
+& vpk pack --packId PalmierProWindows --packVersion $Version --packDir $publishDir --mainExe PalmierPro.exe --outputDir $packDir
 if ($LASTEXITCODE -ne 0) {
     Write-Warning "vpk pack failed. Published bits are at $publishDir"
     exit $LASTEXITCODE
