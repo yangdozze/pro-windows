@@ -114,11 +114,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Palmier-Pro-Windows-x64
-          path: |
-            source/windows/artifacts/velopack/*Setup.exe
-            source/windows/artifacts/velopack/*Portable.zip
-            source/windows/artifacts/velopack/SHA256SUMS.txt
-            source/windows/artifacts/velopack/BUILD_SOURCE.txt
+          path: source/windows/artifacts/velopack/*
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
@@ -131,9 +127,8 @@ jobs:
         run: |
           $tag = "windows-v0.1.${{ github.run_number }}"
           $assets = @(
-            (Get-ChildItem windows/artifacts/velopack -Filter *Setup.exe | Select-Object -First 1).FullName,
-            (Get-ChildItem windows/artifacts/velopack -Filter *Portable.zip | Select-Object -First 1).FullName,
-            (Resolve-Path windows/artifacts/velopack/SHA256SUMS.txt).Path,
-            (Resolve-Path windows/artifacts/velopack/BUILD_SOURCE.txt).Path
+            Get-ChildItem windows/artifacts/velopack -File |
+              Select-Object -ExpandProperty FullName
           )
+          if ($assets.Count -lt 4) { throw "Velopack release assets are incomplete." }
           gh release create $tag @assets --repo yangdozze/pro-windows --title "Palmier Pro Windows $tag" --notes "Native Windows x64 build of Palmier Pro from this repository. Includes the Windows editor, Agent tools, Anthropic/OpenAI BYOK support, tests, and packaging provenance."
